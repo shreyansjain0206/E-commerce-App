@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Orders</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+    .orders-container {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 900px;
+    }
+    .order {
+      border: 1px solid #ddd;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    .order h3 {
+      margin-top: 0;
+      color: #4CAF50;
+    }
+    .order table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .order th, .order td {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+    .order th {
+      background-color: #f2f2f2;
+    }
+    .no-orders {
+      text-align: center;
+      font-size: 18px;
+      color: #777;
+      margin-top: 50px;
+    }
+    button {
+      padding: 10px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Your Orders</h1>
+  </header>
+
+  <div class="orders-container" id="ordersContainer">
+    <!-- Orders will be loaded here -->
+  </div>
+
+  <div style="text-align: center;">
+    <button onclick="goToCart()">Go to Cart</button>
+  </div>
+
+  <script>
+    const API = "http://localhost:5000/api";
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    async function loadOrders() {
+      const res = await fetch(API + "/orders", {
+        headers: {
+          "x-auth-token": token
+        }
+      });
+
+      const orders = await res.json();
+
+      const container = document.getElementById("ordersContainer");
+
+      if (!orders || orders.length === 0) {
+        container.innerHTML = `<div class="no-orders">No orders found.</div>`;
+        return;
+      }
+
+      orders.forEach(order => {
+        const orderDiv = document.createElement("div");
+        orderDiv.classList.add("order");
+
+        let html = `
+          <h3>Order ID: ${order._id}</h3>
+          <p><strong>Status:</strong> ${order.status}</p>
+          <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+          <p><strong>Total Amount:</strong> ₹${order.totalAmount}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        order.products.forEach(item => {
+          html += `
+            <tr>
+              <td>${item.name}</td>
+              <td>${item.quantity}</td>
+              <td>₹${item.price}</td>
+              <td>₹${item.price * item.quantity}</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table>`;
+        orderDiv.innerHTML = html;
+        container.appendChild(orderDiv);
+      });
+    }
+
+    function goToCart() {
+      window.location.href = "cart.html";
+    }
+
+    loadOrders();
+  </script>
+
+</body>
+</html>
